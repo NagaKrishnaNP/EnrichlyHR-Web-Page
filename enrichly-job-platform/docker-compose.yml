@@ -1,0 +1,60 @@
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: enrichly
+      MYSQL_USER: enrichly_app
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-change_me}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-change_me_root}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-change_me_root}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # A single API image doubles as: HTTP API + job scheduler + job worker (see ENGINEERING.md
+  # for why). Scale it horizontally to see multiple workers safely sharing the same queue:
+  #   docker compose up --build --scale api=3
+  # Note: with more than one replica you'll need a load balancer in front for the frontend to
+  # reach a specific instance's port; scaling is mainly to demonstrate the worker safety story
+  # via the logs (`docker compose logs -f api`) showing different workerIds claiming executions.
+  api:
+    build:
+      context: ./backend
+      dockerfile: src/JobPlatform.Api/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__Default: "Server=mysql;Port=3306;Database=enrichly;User=enrichly_app;Password=${MYSQL_PASSWORD:-change_me};TreatTinyAsBoolean=true;"
+      Jwt__Secret: ${JWT_SECRET:-replace_this_with_a_long_random_string_in_production}
+      Jwt__Issuer: enrichly-job-platform
+      Jwt__Audience: enrichly-job-platform
+      Cors__AllowedOrigins__0: ${FRONTEND_ORIGIN:-http://localhost:4200}
+    ports:
+      - "5000:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      # Injected into env.js at container start (see docker-entrypoint.sh) - this is the URL
+      # *your browser* will call, so it must be reachable from wherever you open the app, not
+      # just from inside the Docker network (hence localhost:5000, not http://api:8080).
+      API_BASE_URL: ${API_BASE_URL:-http://localhost:5000}
+    ports:
+      - "4200:80"
+
+volumes:
+  mysql-data:

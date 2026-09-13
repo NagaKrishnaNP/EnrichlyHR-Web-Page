@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Enrichly Job Automation</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <app-root></app-root>
+  <!-- Populated at container start by docker-entrypoint.sh so the API URL can be configured
+       without rebuilding the image. Falls back gracefully if the file doesn't exist (local dev). -->
+  <script src="env.js" onerror="window.__env = window.__env || {}"></script>
+</body>
+</html>
