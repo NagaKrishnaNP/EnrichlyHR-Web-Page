@@ -14,8 +14,9 @@ import { StatusBadgeComponent } from '../../../shared/components/status-badge/st
   template: `
     @if (loading()) {
       <div class="page"><div class="empty-state"><span class="spinner"></span> Loading...</div></div>
-    } @else if (job(); as j) {
-      <div class="page">
+    } @else {
+     @if (job(); as j) {
+     <div class="page">
         <div class="page-header">
           <div>
             <h1>{{ j.name }}</h1>
@@ -96,8 +97,9 @@ import { StatusBadgeComponent } from '../../../shared/components/status-badge/st
           </div>
         }
       </div>
-    }
-  `,
+     }
+   }
+   `,
   styles: [`
     .muted { color: var(--color-text-muted); }
     .small { font-size: 12.5px; }
