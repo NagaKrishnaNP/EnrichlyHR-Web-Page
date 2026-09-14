@@ -9,7 +9,7 @@ COPY src/JobPlatform.Api/JobPlatform.Api.csproj src/JobPlatform.Api/
 RUN dotnet restore src/JobPlatform.Api/JobPlatform.Api.csproj
 
 COPY src/JobPlatform.Api/ src/JobPlatform.Api/
-
+RUN dotnet build src/JobPlatform.Api/JobPlatform.Api.csproj -c Release
 # Generate the initial EF Core migration at build time if one hasn't already been committed.
 # This keeps the sandbox this project was authored in (no local .NET SDK / no network access)
 # from blocking on a chicken-and-egg problem: real migration files need the real `dotnet ef`
