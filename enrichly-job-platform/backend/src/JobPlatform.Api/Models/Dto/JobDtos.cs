@@ -6,24 +6,19 @@ namespace JobPlatform.Api.Models.Dto;
 
 public class CreateJobRequest
 {
-    [Required]
-    [MaxLength(200)]
+    [Required, MaxLength(200)]
     public string Name { get; set; } = string.Empty;
 
     [MaxLength(1000)]
-    public string? Description { get; set; } = string.Empty;
+    public string? Description { get; set; }
 
-    [Required]
-    [MaxLength(10)]
+    [Required, MaxLength(10)]
     public string HttpMethod { get; set; } = string.Empty;
 
-    [Required]
-    [MaxLength(2000)]
-    [Url]
+    [Required, MaxLength(2000), Url]
     public string TargetUrl { get; set; } = string.Empty;
 
     public Dictionary<string, string>? Headers { get; set; }
-
     public string? Body { get; set; }
 
     [Range(1, 300)]
@@ -44,24 +39,19 @@ public class CreateJobRequest
 
 public class UpdateJobRequest
 {
-    [Required]
-    [MaxLength(200)]
+    [Required, MaxLength(200)]
     public string Name { get; set; } = string.Empty;
 
     [MaxLength(1000)]
     public string? Description { get; set; }
 
-    [Required]
-    [MaxLength(10)]
+    [Required, MaxLength(10)]
     public string HttpMethod { get; set; } = string.Empty;
 
-    [Required]
-    [MaxLength(2000)]
-    [Url]
+    [Required, MaxLength(2000), Url]
     public string TargetUrl { get; set; } = string.Empty;
 
     public Dictionary<string, string>? Headers { get; set; }
-
     public string? Body { get; set; }
 
     [Range(1, 300)]
