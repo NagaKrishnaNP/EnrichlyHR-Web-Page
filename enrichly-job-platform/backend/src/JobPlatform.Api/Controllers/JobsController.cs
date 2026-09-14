@@ -249,20 +249,36 @@ public class JobsController : ControllerBase
             ? null
             : JsonSerializer.Deserialize<Dictionary<string, string>>(job.HeadersJson);
 
-        var statsResponse = new JobStatsResponse(
-            stats?.Total ?? 0,
-            stats?.Succeeded ?? 0,
-            stats?.Failed ?? 0,
-            stats?.LastRunAt,
-            lastStatus
-        );
+        var statsResponse = new JobStatsResponse
+        {
+            TotalExecutions = stats?.Total ?? 0,
+            SucceededCount = stats?.Succeeded ?? 0,
+            FailedCount = stats?.Failed ?? 0,
+            LastRunAt = stats?.LastRunAt,
+            LastStatus = lastStatus
+        };
 
-        return new JobResponse(
-            job.Id, job.Name, job.Description, job.HttpMethod, job.TargetUrl, headers, job.Body,
-            job.TimeoutSeconds, job.ScheduleType, job.IntervalSeconds, job.IsEnabled, job.NextRunAt,
-            job.MaxAttempts, job.RetryBaseDelaySeconds, job.CreatedAt, job.UpdatedAt, job.RowVersion,
-            statsResponse
-        );
+        return new JobResponse
+        {
+            Id = job.Id,
+            Name = job.Name,
+            Description = job.Description,
+            HttpMethod = job.HttpMethod,
+            TargetUrl = job.TargetUrl,
+            Headers = headers,
+            Body = job.Body,
+            TimeoutSeconds = job.TimeoutSeconds,
+            ScheduleType = job.ScheduleType,
+            IntervalSeconds = job.IntervalSeconds,
+            IsEnabled = job.IsEnabled,
+            NextRunAt = job.NextRunAt,
+            MaxAttempts = job.MaxAttempts,
+            RetryBaseDelaySeconds = job.RetryBaseDelaySeconds,
+            CreatedAt = job.CreatedAt,
+            UpdatedAt = job.UpdatedAt,
+            RowVersion = job.RowVersion,
+            Stats = statsResponse
+        };
     }
 
     private static ExecutionResponse ToExecutionResponse(JobExecution e, string jobName) => new(
