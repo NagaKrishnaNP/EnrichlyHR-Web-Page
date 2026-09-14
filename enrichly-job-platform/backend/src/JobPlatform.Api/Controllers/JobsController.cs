@@ -51,15 +51,14 @@ public class JobsController : ControllerBase
             .Select(e => new { e.JobId, e.Status, e.CreatedAt })
             .ToListAsync();
 
-        var statsByJob = executions
+                var statsByJob = executions
             .GroupBy(e => e.JobId)
-            .ToDictionary(g => g.Key, g => new
-            {
-                Total = g.Count(),
-                Succeeded = g.Count(e => e.Status == ExecutionStatus.Succeeded),
-                Failed = g.Count(e => e.Status == ExecutionStatus.Failed),
-                LastRunAt = (DateTime?)g.Max(e => e.CreatedAt)
-            });
+            .ToDictionary(g => g.Key, g => new JobStatsAggregate(
+                g.Count(),
+                g.Count(e => e.Status == ExecutionStatus.Succeeded),
+                g.Count(e => e.Status == ExecutionStatus.Failed),
+                g.Max(e => (DateTime?)e.CreatedAt)
+            ));
 
         var lastStatusByJob = executions
             .GroupBy(e => e.JobId)
@@ -81,17 +80,16 @@ public class JobsController : ControllerBase
         var job = await _db.Jobs.FirstOrDefaultAsync(j => j.Id == id && j.UserId == userId);
         if (job is null) return NotFound();
 
-        var executions = await _db.JobExecutions.Where(e => e.JobId == id).ToListAsync();
-        var statsAnon = new
-        {
-            Total = executions.Count,
-            Succeeded = executions.Count(e => e.Status == ExecutionStatus.Succeeded),
-            Failed = executions.Count(e => e.Status == ExecutionStatus.Failed),
-            LastRunAt = executions.OrderByDescending(e => e.CreatedAt).FirstOrDefault()?.CreatedAt
-        };
+                var executions = await _db.JobExecutions.Where(e => e.JobId == id).ToListAsync();
+        var stats = new JobStatsAggregate(
+            executions.Count,
+            executions.Count(e => e.Status == ExecutionStatus.Succeeded),
+            executions.Count(e => e.Status == ExecutionStatus.Failed),
+            executions.OrderByDescending(e => e.CreatedAt).FirstOrDefault()?.CreatedAt
+        );
         var lastStatus = executions.OrderByDescending(e => e.CreatedAt).FirstOrDefault()?.Status;
 
-        return Ok(ToResponse(job, statsAnon, lastStatus));
+        return Ok(ToResponse(job, stats, lastStatus));
     }
 
     [HttpPost]
@@ -243,7 +241,9 @@ public class JobsController : ControllerBase
         return Ok(ToExecutionResponse(execution, job.Name));
     }
 
-    private static JobResponse ToResponse(Job job, dynamic? stats, ExecutionStatus? lastStatus)
+        private sealed record JobStatsAggregate(int Total, int Succeeded, int Failed, DateTime? LastRunAt);
+
+    private static JobResponse ToResponse(Job job, JobStatsAggregate? stats, ExecutionStatus? lastStatus)
     {
         Dictionary<string, string>? headers = job.HeadersJson is null
             ? null
