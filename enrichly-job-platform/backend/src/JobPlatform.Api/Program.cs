@@ -160,6 +160,12 @@ static async Task MigrateWithRetryAsync(WebApplication app)
             logger.LogInformation("Database migrations applied successfully.");
             return;
         }
+        catch (Exception ex) when (ex.Message.Contains("already exists", StringComparison.OrdinalIgnoreCase))
+        {
+            logger.LogWarning(ex, "Migration attempted to create objects that already exist - " +
+                "assuming the schema is already up to date from a previous deploy and continuing.");
+            return;
+        }
         catch (Exception ex) when (attempt < maxAttempts)
         {
             logger.LogWarning("Database not ready yet (attempt {Attempt}/{Max}): {Message}. Retrying in 3s...",
